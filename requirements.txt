@@ -1,0 +1,4 @@
+dialogflow==0.7.2
+slackclient==2.3.1
+pytelegrambotapi==3.6.6
+python_decouple==3.3

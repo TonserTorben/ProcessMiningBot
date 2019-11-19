@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="net1" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <page id="n0">
+      <place id="0">
+        <name>
+          <text>0</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="9">
+        <name>
+          <text>9</text>
+        </name>
+      </place>
+      <place id="13">
+        <name>
+          <text>13</text>
+        </name>
+      </place>
+      <place id="10">
+        <name>
+          <text>10</text>
+        </name>
+      </place>
+      <place id="11">
+        <name>
+          <text>11</text>
+        </name>
+      </place>
+      <place id="1">
+        <name>
+          <text>1</text>
+        </name>
+      </place>
+      <place id="12">
+        <name>
+          <text>12</text>
+        </name>
+      </place>
+      <transition id="7">
+        <name>
+          <text>Activity F</text>
+        </name>
+      </transition>
+      <transition id="8">
+        <name>
+          <text>Activity G</text>
+        </name>
+      </transition>
+      <transition id="4">
+        <name>
+          <text>Activity C</text>
+        </name>
+      </transition>
+      <transition id="2">
+        <name>
+          <text>Activity A</text>
+        </name>
+      </transition>
+      <transition id="5">
+        <name>
+          <text>Activity D</text>
+        </name>
+      </transition>
+      <transition id="3">
+        <name>
+          <text>Activity B</text>
+        </name>
+      </transition>
+      <transition id="6">
+        <name>
+          <text>Activity E</text>
+        </name>
+      </transition>
+      <arc id="-9223371921729392892" source="6" target="10"/>
+      <arc id="115125382920" source="9" target="4"/>
+      <arc id="115125382941" source="8" target="9"/>
+      <arc id="-9223371921729394965" source="2" target="9"/>
+      <arc id="-9223371921729392885" source="3" target="1"/>
+      <arc id="115125380847" source="4" target="11"/>
+      <arc id="115125382927" source="5" target="12"/>
+      <arc id="-9223371921729394958" source="12" target="6"/>
+      <arc id="-9223371921729392878" source="7" target="13"/>
+      <arc id="115125380854" source="11" target="5"/>
+      <arc id="115125382934" source="10" target="7"/>
+      <arc id="-9223371921729392871" source="0" target="2"/>
+      <arc id="-9223371921729394951" source="13" target="8"/>
+      <arc id="115125380861" source="10" target="3"/>
+    </page>
+  </net>
+</pnml>
