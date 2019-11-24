@@ -3,17 +3,25 @@ import abc
 class AbstractMessagingManager(abc.ABC):
 
     @abc.abstractmethod
+    def handle_message(self, message):
+        pass
+
+    @abc.abstractmethod
     def send_message(self, message):
         pass
 
     @abc.abstractmethod
-    def send_file(self):
+    def send_photo(self, message):
         pass
 
     @abc.abstractmethod
-    def receive_message(self):
+    def send_video(self, message):
         pass
 
     @abc.abstractmethod
-    def receive_file(self):
+    def start_bot(self):
+        pass
+
+    @abc.abstractmethod
+    def receive_message(self, message):
         pass

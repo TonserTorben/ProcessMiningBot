@@ -1,9 +1,10 @@
 from decouple import config
 import telebot
 import requests
-import os
+import os, tempfile
+from datetime import date
 
-from IM.reply_enum import ReplyType
+from Enums.reply_enum import ReplyType
 import IM.IMManager as manager
     
 
@@ -18,27 +19,50 @@ bot = telebot.TeleBot(api_key)
 def receive_message(message):
     msg = message.text 
     chat_id = message.chat.id
-    reply, reply_type = manager.get_intention(msg)
-
-    if (reply_type == ReplyType.text):
-        send_message(chat_id, reply)
-    elif (reply_type == ReplyType.photo):
-        
-        try:
-            bot.send_chat_action(chat_id, "upload_photo")
-            photo = open(reply, 'rb')
-            send_photo(chat_id, photo)
-        except Exception as e: 
-            print(e)
-    elif (reply_type == ReplyType.video):
-        send_video(chat_id, reply)
+    reply, reply_type = manager.handle_message(msg)
+    handle_message(chat_id, reply, reply_type)
 
 @bot.message_handler(content_types=['document'])
 def receive_file(message):
     file_info = bot.get_file(message.document.file_id)
     file = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(api_key, file_info.file_path))
     chat_id = message.chat.id
+    _, tmp_file = tempfile.mkstemp()
+    open(tmp_file, 'wb').write(file.content)
+    
     send_message(chat_id, 'Thanks for the file')
+    user = message.from_user
+    name = user.username if user.username != None else user.first_name + " " + user.last_name
+    file_i = {"name": message.document.file_name,
+              "file": tmp_file, 
+              "user": name,
+              "date_of_upload": date.today(),
+              "last_edit": date.today(),
+              "filter": False,        
+              "size": file_info.file_size, 
+              "type": message.document.file_name.split('.')[-1]
+              }
+    print(file_i)
+    manager.save_file(file_i)
+
+def handle_file(file):
+    pass
+
+def handle_message(chat_id, reply, reply_type):
+    if reply_type == ReplyType.multi:
+        for i, j in reply:
+            handle_message(chat_id, i, j)
+    elif reply_type == ReplyType.text:
+        send_message(chat_id, reply)
+    elif reply_type == ReplyType.photo:
+        try:
+            bot.send_chat_action(chat_id, "upload_photo")
+            photo = open(reply, 'rb')
+            send_photo(chat_id, photo)
+        except Exception as e: 
+            print(e)
+    elif reply_type == ReplyType.video:
+        send_video(chat_id, reply)
 
 def send_message(chat_id, message):
     #bot.reply_to(msg, reply)

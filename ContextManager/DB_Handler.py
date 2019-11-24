@@ -1,0 +1,80 @@
+import sqlite3
+
+class DB_Handler:
+    
+    def __init__(self, connectionString):
+        self.db = sqlite3.connect(connectionString, check_same_thread=False)
+        self.c = self.db.cursor()
+
+    def close(self):
+        self.db.close()
+
+    def get_item(self, db_select, db_from, db_where):
+        #Idea is to specify the specific table, what item to get and the clauses for the select statement.
+        statement = "SELECT {} FROM {} WHERE {}"
+        statement.format(db_select, db_from, db_where)
+        self.c.execute(statement)
+        result = self.c.fetchone()
+        return result
+
+    def get_items(self, db_select, db_from, db_where):
+        statement = "SELECT {} FROM {} WHERE {}"
+        statement.format(db_select, db_from, db_where)
+        self.c.execute(statement)
+        results = self.c.fetchall()
+        return results
+        
+    #Skal opdateres til hver enkelt tabel
+    def update_item(self, db_update, db_set, db_where):
+        statement = "UPDATE {} SET {} WHERE {}"
+        statement.format(db_update, db_set, db_where)
+        self.c.execute(statement)
+        self.db.commit()
+
+    def insert_item(self, db_into, db_values):
+        statement = "INSERT INTO {} VALUES {}".format(db_into, db_values)        
+        self.c.execute(statement)
+        self.db.commit()
+
+    #Insert STATEMENTS
+    def insert_file(self, file):
+        statement = "INSERT INTO Files (Name, File, User, Date_of_upload, Last_Edited, Filtered, Size, Type) Values(?, ?, ?, ?, ?, ?, ?, ?)"
+        values = (file['name'], file['file'], file['user'], file['date_of_upload'], file['last_edit'], file['filter'], file['size'], file['type'])
+        self.c.execute(statement, values)
+        self.db.commit()
+
+    def insert_script(self, script):
+        statement = "INSERT INTO Scripts (Name, Language, Script, Output) VALUES(?, ?, ?, ?)"
+        values = (script['name'], script['language'], script['script'], script['output'])
+        self.c.execute(statement, values)
+        self.db.commit()
+
+    def insert_current_file(self, file):
+        statement = "INSERT INTO Current_file (Chat_id, File_id, Type) VALUES (?, ?, ?)"
+        values = (file['chat_id'], file['file_id'], file['type'])
+        self.c.execute(statement, values)
+        self.db.commit()
+
+    def insert_filtered_file(self, file):
+        statement = "INSERT INTO Filtered_Files (Original_id, Filtered_id, Filter_type)"
+        values = (file['original_id'], file['filtered_id'], file['filter_type'])
+        self.c.execute(statement, values)
+        self.db.commit()
+
+    def insert_files_in_chat(self, file):
+        statement = "INSERT INTO Files_in_chat (Chat_id, File_id)"
+        values = (file['chat_id'], file['file_id'])
+        self.c.execute(statement, values)
+        self.db.commit()
+
+    def insert_filter_types(self, types):
+        statement = "INSERT INTO Filter_Types (Type)"
+        value = (types)
+        self.c.execute(statement, value)
+        self.db.commit()
+
+    
+    def delete_item(self, db_from, db_where):
+        statement = "DELETE FROM {} WHERE {}".format(db_from, db_where)
+        self.c.execute(statement)
+        self.c.commit()
