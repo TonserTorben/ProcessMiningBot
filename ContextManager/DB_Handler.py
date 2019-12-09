@@ -11,23 +11,21 @@ class DB_Handler:
 
     def get_item(self, db_select, db_from, db_where):
         #Idea is to specify the specific table, what item to get and the clauses for the select statement.
-        statement = "SELECT {} FROM {} WHERE {}"
-        statement.format(db_select, db_from, db_where)
+        statement = "SELECT {} FROM {} WHERE {}".format(db_select, db_from, db_where)
         self.c.execute(statement)
         result = self.c.fetchone()
+        result = result[0] if result != None else None
         return result
 
     def get_items(self, db_select, db_from, db_where):
-        statement = "SELECT {} FROM {} WHERE {}"
-        statement.format(db_select, db_from, db_where)
+        statement = "SELECT {} FROM {} WHERE {}".format(db_select, db_from, db_where)
         self.c.execute(statement)
         results = self.c.fetchall()
         return results
         
     #Skal opdateres til hver enkelt tabel
     def update_item(self, db_update, db_set, db_where):
-        statement = "UPDATE {} SET {} WHERE {}"
-        statement.format(db_update, db_set, db_where)
+        statement = "UPDATE {} SET {} WHERE {}".format(db_update, db_set, db_where)
         self.c.execute(statement)
         self.db.commit()
 
@@ -37,11 +35,18 @@ class DB_Handler:
         self.db.commit()
 
     #Insert STATEMENTS
+    # Inserting file in both Files table and Files_in_chat table
     def insert_file(self, file):
         statement = "INSERT INTO Files (Name, File, User, Date_of_upload, Last_Edited, Filtered, Size, Type) Values(?, ?, ?, ?, ?, ?, ?, ?)"
         values = (file['name'], file['file'], file['user'], file['date_of_upload'], file['last_edit'], file['filter'], file['size'], file['type'])
         self.c.execute(statement, values)
         self.db.commit()
+        row_id = self.c.lastrowid
+        statement = "INSERT INTO Files_in_Chat (Chat_id, File_id) VALUES(?, ?)"
+        values = (file['chat_id'], row_id)
+        self.c.execute(statement, values)
+        self.db.commit()
+        return row_id
 
     def insert_script(self, script):
         statement = "INSERT INTO Scripts (Name, Language, Script, Output) VALUES(?, ?, ?, ?)"
@@ -49,9 +54,9 @@ class DB_Handler:
         self.c.execute(statement, values)
         self.db.commit()
 
-    def insert_current_file(self, file):
+    def insert_current_file(self, file, file_id):
         statement = "INSERT INTO Current_file (Chat_id, File_id, Type) VALUES (?, ?, ?)"
-        values = (file['chat_id'], file['file_id'], file['type'])
+        values = (file['chat_id'], file_id, file['type'])
         self.c.execute(statement, values)
         self.db.commit()
 
@@ -72,7 +77,6 @@ class DB_Handler:
         value = (types)
         self.c.execute(statement, value)
         self.db.commit()
-
     
     def delete_item(self, db_from, db_where):
         statement = "DELETE FROM {} WHERE {}".format(db_from, db_where)
