@@ -5,7 +5,8 @@ class ExecutionState(enum.Enum):
     Model                   = 2
     Both                    = 3
     Nothing                 = 4
-    Alpha                   = 5
+    Chat_id                 = 5
+    Alpha                   = 19
     Conformance_Complete    = 6
     Conformance_Fitness     = 7
     Conformance_Precision   = 8
