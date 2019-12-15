@@ -19,7 +19,7 @@ bot = telebot.TeleBot(api_key)
 def receive_message(message):
     msg = message.text 
     chat_id = message.chat.id
-    reply, reply_type = manager.handle_message(msg)
+    reply, reply_type = manager.handle_message(msg, chat_id, False)
     handle_message(chat_id, reply, reply_type)
 
 @bot.message_handler(content_types=['document'])
@@ -27,23 +27,24 @@ def receive_file(message):
     file_info = bot.get_file(message.document.file_id)
     file = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(api_key, file_info.file_path))
     chat_id = message.chat.id
-    _, tmp_file = tempfile.mkstemp()
-    open(tmp_file, 'wb').write(file.content)
-    
-    send_message(chat_id, 'Thanks for the file')
+    #_, tmp_file = tempfile.mkstemp()
+    #open(tmp_file, 'wb').write(file.content)
     user = message.from_user
     name = user.username if user.username != None else user.first_name + " " + user.last_name
     file_i = {"name": message.document.file_name,
-              "file": tmp_file, 
+              "file": file, 
               "user": name,
-              "date_of_upload": date.today(),
+              "upload_date": date.today(),
               "last_edit": date.today(),
               "filter": False,        
               "size": file_info.file_size, 
-              "type": message.document.file_name.split('.')[-1]
+              "type": message.document.file_name.split('.')[-1],
+              "chat_id": chat_id
               }
-    print(file_i)
-    manager.save_file(file_i)
+    #print(file_i)
+    reply, reply_type = manager.handle_message(file_i, chat_id, True)
+    handle_message(chat_id, reply, reply_type)
+    #manager.save_file(file_i)
 
 def handle_file(file):
     pass
