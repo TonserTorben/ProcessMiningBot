@@ -1,6 +1,9 @@
 import os
 import tempfile
 import pm4py
+import Globals
+
+from PM import rexecutor as r_exe
 
 from pm4py.util                                         import constants
 
@@ -30,6 +33,8 @@ from pm4py.algo.conformance.tokenreplay.diagnostics     import duration_diagnost
 
 from pm4py.algo.filtering.log.auto_filter.auto_filter   import apply_auto_filter
 from pm4py.algo.filtering.log.attributes                import attributes_filter
+from pm4py.algo.filtering.log.start_activities          import start_activities_filter
+from pm4py.algo.filtering.log.end_activities            import end_activities_filter
 
 from pm4py.statistics.traces.log                        import case_statistics
 
@@ -38,6 +43,13 @@ def import_log(log):
 
 def import_model(model):
     return pnml_importer.import_net(model)
+
+def show_model(model):
+    net, initial_marking, final_marking = import_model(model)
+    gvis = pn_vis_factory.apply(net, initial_marking, final_marking)
+    _, file_name = tempfile.mkstemp(suffix='.png')
+    pn_vis_factory.save(gvis, file_name)
+    return file_name
 
 #Alpha Miner
 def do_alpha_miner(log):
@@ -58,13 +70,18 @@ def do_inductive_miner(log):
     return file_name
 
 #Directed flow graph if performance then performance=True
-def do_dfg(log, performance):
+def do_dfg_performance(log):
     log = import_log(log)
-    dfg = dfg_factory.apply(log)
-    if performance: 
-        gviz = dfg_vis_factory.apply(dfg, log=log, variant="performance")
-    else: 
-        gviz = dfg_vis_factory.apply(dfg, log=log, variant="frequency")
+    dfg = dfg_factory.apply(log) 
+    gviz = dfg_vis_factory.apply(dfg, log=log, variant="performance")    
+    _, file_name = tempfile.mkstemp(suffix='.png')
+    dfg_vis_factory.save(gviz, file_name)
+    return file_name
+
+def do_dfg_resource(log):
+    log = import_log(log)
+    dfg = dfg_factory.apply(log) 
+    gviz = dfg_vis_factory.apply(dfg, log=log, variant="frequency")
     _, file_name = tempfile.mkstemp(suffix='.png')
     dfg_vis_factory.save(gviz, file_name)
     return file_name
@@ -91,11 +108,13 @@ def log_desciption(log):
     except OSError as e:
         print("error when calcing over time")
         print(e)
-
-    return {"traces"            : len(log), 
+    
+    result = {"traces"            : len(log), 
             "acts_freq"         : util.log.get_event_labels_counted(log, "concept:name"),
             "case_duration"     : file_1,
             "events_over_time"  : file_2}
+    print(file_1)
+    return result
 
 #Filtering Section
 #get activities of log
@@ -103,13 +122,34 @@ def get_activities(log):
     log = import_log(log)
     return util.log.get_event_labels(log, "concept:name")
 
+def get_start_activities(log):
+    log = import_log(log)
+    return start_activities_filter.get_start_activities(log)
+
+def get_end_activities(log):
+    log = import_log(log)
+    return end_activities_filter.get_end_activities(log)
+
 #Apply filter for keeping activities
 def filter_keep_activities(log, activities):
     log = import_log(log)
     tracefilter_log_pos = attributes_filter.apply_events(log, activities, parameters={constants.PARAMETER_CONSTANT_ATTRIBUTE_KEY: "concept:name", "positive": True})
-    new_log = os.path.join("Files", "log_filtered.xes")
-    xes_exporter.export_log(tracefilter_log_pos, new_log, parameters={"compress": False})
-    return new_log
+    _, temp_file = tempfile.mkstemp(suffix='.png')
+    xes_exporter.export_log(tracefilter_log_pos, temp_file, parameters={"compress": False})
+    return temp_file
+    
+def filter_start_activities(log, activities):
+    log = import_log(log)
+    filtered_log = start_activities_filter.apply(log, activities)
+    _, temp_file = tempfile.mkstemp(suffix='.png')
+    xes_exporter.export_log(filtered_log, temp_file, parameters={"compress": False})
+
+def filter_end_activities(log, activities):
+    log = import_log(log)
+    filtered_log = end_activities_filter.apply(log, activities)
+    _, temp_file = tempfile.mkstemp(suffix='.png')
+    xes_exporter.export_log(filtered_log, temp_file, parameters={'compress': False})
+
 
 #Conformance Section
 def do_conformance(log, model, conformance_type, model_type):
@@ -133,7 +173,7 @@ def conformance_fitness(log, model, model_type):
     gviz = pn_vis_factory.apply(net, initial_marking, final_marking)
     _, file_name = tempfile.mkstemp(suffix='.png')
     pn_vis_factory.save(gviz, file_name)
-    return {'fitness': fitness, 
+    return {'result': fitness, 
             'Model': file_name}
 
 def conformance_precision(log, model, model_type):
@@ -149,7 +189,7 @@ def conformance_precision(log, model, model_type):
     gviz = pn_vis_factory.apply(net, initial_marking, final_marking)
     _, file_name = tempfile.mkstemp(suffix='.png')
     pn_vis_factory.save(gviz, file_name)
-    return {'precision': precision,
+    return {'result': precision,
             'Model': file_name}
 
 def conformance_complete(log, model, model_type):
@@ -165,5 +205,12 @@ def conformance_complete(log, model, model_type):
     gviz = pn_vis_factory.apply(net, initial_marking, final_marking)
     _, file_name = tempfile.mkstemp(suffix='.png')
     pn_vis_factory.save(gviz, file_name)
-    return {'evaluation': evaluation,
-            'model': file_name}
+    return {'result': evaluation,
+            'Model': file_name}
+
+def r_handler(script, log):
+    r_script = Globals.get_r_script()
+    _, script_file = tempfile.mkstemp()
+    with open(script_file, "w+") as f:
+        f.write(script)
+    return r_exe.run_r(r_script, script_file, log)
