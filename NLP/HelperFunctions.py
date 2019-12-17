@@ -17,7 +17,7 @@ def list_activities(log):
     '''
     return activities_string
 
-#Used for filtering
+#Used for filtering sdf
 def choose_activities(msg, chat_id):
     global _chosen_activities
     if msg.lower() == "done":
